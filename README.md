@@ -39,7 +39,7 @@ kubectl apply -n argocd \
 kubectl -n argocd get pods
 ```
 
-Install CLI:
+## Install Argo CD CLI on Ubuntu
 
 ```bash
 # Download the latest Argo CD CLI binary
@@ -54,6 +54,23 @@ sudo mv argocd /usr/local/bin/
 # Verify installation
 argocd version
 ```
+
+## Login to Argo CD
+
+Once the CLI is installed, you can log in to your Argo CD server:
+
+```bash
+argocd login <ARGOCD_SERVER> \
+  --username admin \
+  --password <initial-password>
+```
+
+- `<ARGOCD_SERVER>` → the external IP or DNS name of your Argo CD API server (e.g., `localhost:8080` if port‑forwarded, or the LoadBalancer DNS on EKS).  
+- `<initial-password>` → by default, it’s the name of the Argo CD server pod:
+  ```bash
+  kubectl -n argocd get pods
+  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+  ```
 
 ## Install Argo Rollouts
 
