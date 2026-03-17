@@ -40,9 +40,19 @@ kubectl -n argocd get pods
 ```
 
 Install CLI:
+
 ```bash
-brew install argocd   # or download binary
-argocd login <ARGOCD_SERVER>
+# Download the latest Argo CD CLI binary
+wget https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 -O argocd
+
+# Make it executable
+chmod +x argocd
+
+# Move it into your PATH
+sudo mv argocd /usr/local/bin/
+
+# Verify installation
+argocd version
 ```
 
 ## Install Argo Rollouts
