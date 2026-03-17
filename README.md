@@ -1,1 +1,189 @@
-# argo-rollout-blue-green
+## Install MicroK8s (Local Testing)
+
+```bash
+sudo snap install microk8s --classic
+microk8s status --wait-ready
+sudo usermod -a -G microk8s $USER
+sudo chown -f -R $USER ~/.kube
+newgrp microk8s
+microk8s status
+sudo snap alias microk8s.kubectl kubectl
+kubectl get nodes
+microk8s enable dns storage ingress
+```
+
+Expose ingress via NodePort:
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress-microk8s-controller
+  namespace: ingress
+spec:
+  type: NodePort
+  selector:
+    name: nginx-ingress-microk8s
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
+    protocol: TCP
+```
+
+## Install Argo CD
+
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl -n argocd get pods
+```
+
+Install CLI:
+```bash
+brew install argocd   # or download binary
+argocd login <ARGOCD_SERVER>
+```
+
+## Install Argo Rollouts
+
+```bash
+kubectl create namespace argo-rollouts
+kubectl apply -n argo-rollouts \
+  -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+```
+
+Install plugin:
+```bash
+brew install argoproj/tap/kubectl-argo-rollouts
+```
+
+## Manifests for Blue‑Green Rollout
+
+### `rollout.yaml`
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: demo-rollout
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+      - name: demo
+        image: hashicorp/http-echo:0.2.3
+        args:
+        - "-text=Hello from GREEN"
+        - "-listen=:80"
+        ports:
+        - containerPort: 80
+  strategy:
+    blueGreen:
+      activeService: demo-service
+      previewService: demo-preview
+      autoPromotionEnabled: false
+```
+
+### `demo-service.yaml` (Active)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-service
+spec:
+  selector:
+    app: demo
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+### `demo-preview.yaml` (Preview)
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-preview
+spec:
+  selector:
+    app: demo
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+### `demo-ingress.yaml`
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+spec:
+  rules:
+  - host: demo.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-service
+            port:
+              number: 80
+  - host: preview.demo.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-preview
+            port:
+              number: 80
+```
+
+## Apply and Test
+
+```bash
+kubectl apply -f rollout.yaml
+kubectl apply -f demo-service.yaml
+kubectl apply -f demo-preview.yaml
+kubectl apply -f demo-ingress.yaml
+```
+
+Add host entries:
+```bash
+echo "10.10.0.2 demo.local" | sudo tee -a /etc/hosts
+echo "10.10.0.2 preview.demo.local" | sudo tee -a /etc/hosts
+```
+
+Test:
+```bash
+curl http://demo.local:30080
+Hello from BLUE   # active version
+
+curl http://preview.demo.local:30080
+Hello from GREEN  # preview version
+```
+## Promote / Rollback
+
+Promote Green:
+```bash
+kubectl argo rollouts promote demo-rollout
+curl http://demo.local:30080
+Hello from GREEN
+```
+
+Rollback:
+```bash
+kubectl argo rollouts undo demo-rollout
+curl http://demo.local:30080
+Hello from BLUE
+```
