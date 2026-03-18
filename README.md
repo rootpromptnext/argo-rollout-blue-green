@@ -29,14 +29,27 @@ spec:
     nodePort: 30080
     protocol: TCP
 ```
+## Install helm
+
+```bash
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+## Copy kubeconfig
+```bash
+mkdir ~/.kube ;  microk8s config > ~/.kube/config
+```
 
 ## Install Argo CD
 
 ```bash
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+helm repo ls
 kubectl create namespace argocd
-kubectl apply -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl -n argocd get pods
+helm install argocd argo/argo-cd --namespace argocd
+helm -n argocd ls
 ```
 
 ## Install Argo CD CLI on Ubuntu
@@ -58,7 +71,7 @@ argocd version
 ## Run Argo CD on nodeport
 ```bash
 kubectl patch svc argocd-server -n argocd \
-  -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "nodePort": 30081, "protocol": "TCP", "targetPort": 443}]}}'
+  -p '{"spec": {"type": "NodePort", "ports": [{"port": 80, "nodePort": 30081}]}}'
 ```
 
 ## Login to Argo CD
@@ -78,17 +91,43 @@ argocd login <ARGOCD_SERVER> \
   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
   ```
 
+## Output for referene
+```bash
+prayag@devops-vm:~$ argocd login 10.10.0.2:30081 \
+  --username admin \
+  --password <changeme> \
+  --insecure
+'admin:login' logged in successfully
+Context '10.10.0.2:30081' updated
+prayag@devops-vm:~$
+```
+
 ## Install Argo Rollouts
 
 ```bash
 kubectl create namespace argo-rollouts
-kubectl apply -n argo-rollouts \
-  -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+helm repo add argo https://argoproj.github.io/argo-helm
+helm install argo-rollouts argo/argo-rollouts -n argo-rollouts
 ```
 
 Install plugin:
 ```bash
-brew install argoproj/tap/kubectl-argo-rollouts
+curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+chmod +x kubectl-argo-rollouts-linux-amd64
+sudo mv kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
+```
+
+Verify plugin
+```bash
+prayag@devops-vm:~$ kubectl-argo-rollouts version
+kubectl-argo-rollouts: v1.8.4+55e89dd
+  BuildDate: 2026-02-13T22:01:42Z
+  GitCommit: 55e89ddc5329db9ebd72edff5503f2822d2e80ff
+  GitTreeState: clean
+  GoVersion: go1.23.12
+  Compiler: gc
+  Platform: linux/amd64
+prayag@devops-vm:~$
 ```
 
 ## Manifests for Blue‑Green Rollout
