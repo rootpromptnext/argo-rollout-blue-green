@@ -50,7 +50,6 @@ helm repo ls
 kubectl create namespace argocd
 helm install argocd argo/argo-cd --namespace argocd
 helm -n argocd ls
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 ```
 
 ## Install Argo CD CLI on Ubuntu
@@ -71,8 +70,7 @@ argocd version
 
 ## Run Argo CD on nodeport
 ```bash
-kubectl patch svc argocd-server -n argocd \
-  -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "nodePort": 30081, "protocol": "TCP", "targetPort": 443}]}}'
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 ```
 
 ## Login to Argo CD
