@@ -9,7 +9,7 @@ newgrp microk8s
 microk8s status
 sudo snap alias microk8s.kubectl kubectl
 kubectl get nodes
-microk8s enable dns storage ingress
+microk8s enable dns hostpath-storage ingress
 ```
 
 Expose ingress via NodePort:
