@@ -70,7 +70,8 @@ argocd version
 
 ## Run Argo CD on nodeport
 ```bash
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
+kubectl patch svc argocd-server -n argocd \
+  -p '{"spec": {"type": "NodePort", "ports": [{"port": 80, "nodePort": 30081}]}}'
 ```
 
 ## Login to Argo CD
