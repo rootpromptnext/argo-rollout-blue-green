@@ -91,6 +91,17 @@ argocd login <ARGOCD_SERVER> \
   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
   ```
 
+## Output for referene
+```bash
+prayag@devops-vm:~$ argocd login 10.10.0.2:30081 \
+  --username admin \
+  --password <changeme> \
+  --insecure
+'admin:login' logged in successfully
+Context '10.10.0.2:30081' updated
+prayag@devops-vm:~$
+```
+
 ## Install Argo Rollouts
 
 ```bash
