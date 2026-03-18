@@ -29,14 +29,28 @@ spec:
     nodePort: 30080
     protocol: TCP
 ```
+## Install helm
+
+```bash
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+## Copy kubeconfig
+```bash
+mkdir ~/.kube ;  microk8s config > ~/.kube/config
+```
 
 ## Install Argo CD
 
 ```bash
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+helm repo ls
 kubectl create namespace argocd
-kubectl apply -n argocd \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl -n argocd get pods
+helm install argocd argo/argo-cd --namespace argocd
+helm -n argocd ls
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 ```
 
 ## Install Argo CD CLI on Ubuntu
