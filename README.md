@@ -106,13 +106,28 @@ prayag@devops-vm:~$
 
 ```bash
 kubectl create namespace argo-rollouts
-kubectl apply -n argo-rollouts \
-  -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+helm repo add argo https://argoproj.github.io/argo-helm
+helm install argo-rollouts argo/argo-rollouts -n argo-rollouts
 ```
 
 Install plugin:
 ```bash
-brew install argoproj/tap/kubectl-argo-rollouts
+curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+chmod +x kubectl-argo-rollouts-linux-amd64
+sudo mv kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
+```
+
+Verify plugin
+```bash
+prayag@devops-vm:~$ kubectl-argo-rollouts version
+kubectl-argo-rollouts: v1.8.4+55e89dd
+  BuildDate: 2026-02-13T22:01:42Z
+  GitCommit: 55e89ddc5329db9ebd72edff5503f2822d2e80ff
+  GitTreeState: clean
+  GoVersion: go1.23.12
+  Compiler: gc
+  Platform: linux/amd64
+prayag@devops-vm:~$
 ```
 
 ## Manifests for Blue‑Green Rollout
