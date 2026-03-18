@@ -55,6 +55,12 @@ sudo mv argocd /usr/local/bin/
 argocd version
 ```
 
+## Rund Argo CD on nodeport
+```bash
+kubectl patch svc argocd-server -n argocd \
+  -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "nodePort": 30081, "protocol": "TCP", "targetPort": 443}]}}'
+```
+
 ## Login to Argo CD
 
 Once the CLI is installed, you can log in to your Argo CD server:
@@ -65,7 +71,7 @@ argocd login <ARGOCD_SERVER> \
   --password <initial-password>
 ```
 
-- `<ARGOCD_SERVER>` → the external IP or DNS name of your Argo CD API server (e.g., `localhost:8080` if port‑forwarded, or the LoadBalancer DNS on EKS).  
+- `<ARGOCD_SERVER>` → the external IP or DNS name of your Argo CD API server (e.g., `localhost:8080` if port‑forwarded, or nodeport or the LoadBalancer DNS on EKS).  
 - `<initial-password>` → by default, it’s the name of the Argo CD server pod:
   ```bash
   kubectl -n argocd get pods
