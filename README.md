@@ -55,7 +55,7 @@ sudo mv argocd /usr/local/bin/
 argocd version
 ```
 
-## Rund Argo CD on nodeport
+## Run Argo CD on nodeport
 ```bash
 kubectl patch svc argocd-server -n argocd \
   -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "nodePort": 30081, "protocol": "TCP", "targetPort": 443}]}}'
